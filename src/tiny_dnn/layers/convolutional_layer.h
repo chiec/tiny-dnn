@@ -255,6 +255,7 @@ class convolutional_layer : public layer {
    **/
   void forward_propagation(const std::vector<tensor_t *> &in_data,
                            std::vector<tensor_t *> &out_data) override {
+    std::cout << "**INTO FORWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     // apply padding to the input tensor
     padding_op_.copy_and_pad_input(*in_data[0], cws_.prev_out_padded_);
 

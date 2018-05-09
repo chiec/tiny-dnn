@@ -57,13 +57,33 @@ static const bool tbl[] = {
      << tanh()
      << fc(120, 10, true, backend_type)  // F6, 120-in, 10-out
      << tanh();
+
+/*
+  nn << fc(1024, 500, true, backend_type)
+     << tanh()
+     << fc(500, 200, true, backend_type)
+     << tanh()
+     << fc(200, 100, true, backend_type)
+     << tanh()
+     << fc(100, 50, true, backend_type)
+     << tanh()
+     << fc(50, 25, true, backend_type)
+     << tanh()
+     << fc(25, 10, true, backend_type)
+     << tanh();
+     */
+
+//  nn << fc(1024, 20, true, backend_type)
+//    << tanh();
 }
 
 static void train_lenet(const std::string &data_dir_path,
                         double learning_rate,
                         const int n_train_epochs,
                         const int n_minibatch,
-                        tiny_dnn::core::backend_t backend_type) {
+                        tiny_dnn::core::backend_t backend_type,
+                        const int load,
+                        const bool test) {
   // specify loss-function and learning strategy
   tiny_dnn::network<tiny_dnn::sequential> nn;
   tiny_dnn::adagrad optimizer;
@@ -77,15 +97,15 @@ static void train_lenet(const std::string &data_dir_path,
   std::vector<tiny_dnn::vec_t> train_images, test_images;
 
   tiny_dnn::parse_mnist_labels(data_dir_path + "/train-labels.idx1-ubyte",
-                               &train_labels);
+                               &train_labels, load);
   tiny_dnn::parse_mnist_images(data_dir_path + "/train-images.idx3-ubyte",
-                               &train_images, -1.0, 1.0, 2, 2);
+                               &train_images, -1.0, 1.0, 2, 2, load);
   tiny_dnn::parse_mnist_labels(data_dir_path + "/t10k-labels.idx1-ubyte",
-                               &test_labels);
+                               &test_labels, load);
   tiny_dnn::parse_mnist_images(data_dir_path + "/t10k-images.idx3-ubyte",
-                               &test_images, -1.0, 1.0, 2, 2);
+                               &test_images, -1.0, 1.0, 2, 2, load);
 
-  std::cout << "start training" << std::endl;
+  //std::cout << "start training" << std::endl;
 
   tiny_dnn::progress_display disp(train_images.size());
   tiny_dnn::timer t;
@@ -100,26 +120,30 @@ static void train_lenet(const std::string &data_dir_path,
     std::cout << "Epoch " << epoch << "/" << n_train_epochs << " finished. "
               << t.elapsed() << "s elapsed." << std::endl;
     ++epoch;
-    tiny_dnn::result res = nn.test(test_images, test_labels);
-    std::cout << res.num_success << "/" << res.num_total << std::endl;
+    //tiny_dnn::result res = nn.test(test_images, test_labels);
+    //std::cout << res.num_success << "/" << res.num_total << std::endl;
 
-    disp.restart(train_images.size());
-    t.restart();
+    //disp.restart(train_images.size());
+    //t.restart();
   };
 
-  auto on_enumerate_minibatch = [&]() { disp += n_minibatch; };
+  auto on_enumerate_minibatch = [&]() {
+  //  disp += n_minibatch;
+  };
 
   // training
   nn.train<tiny_dnn::mse>(optimizer, train_images, train_labels, n_minibatch,
                           n_train_epochs, on_enumerate_minibatch,
                           on_enumerate_epoch);
 
-  std::cout << "end training." << std::endl;
+  //std::cout << "end training." << std::endl;
 
   // test and show results
-  nn.test(test_images, test_labels).print_detail(std::cout);
+  if (test) {
+    nn.test(test_images, test_labels).print_detail(std::cout);
+  }
   // save network model & trained weights
-  nn.save("LeNet-model");
+  //nn.save("LeNet-model");
 }
 
 static tiny_dnn::core::backend_t parse_backend_name(const std::string &name) {
@@ -147,6 +171,8 @@ int main(int argc, char **argv) {
   int epochs                             = 30;
   std::string data_path                  = "";
   int minibatch_size                     = 16;
+  int load                               = 32;
+  bool test                              = false;
   tiny_dnn::core::backend_t backend_type = tiny_dnn::core::default_engine();
 
   if (argc == 2) {
@@ -168,6 +194,10 @@ int main(int argc, char **argv) {
       backend_type = parse_backend_name(argv[count + 1]);
     } else if (argname == "--data_path") {
       data_path = std::string(argv[count + 1]);
+    } else if (argname == "--load") {
+      load = atoi(argv[count + 1]);
+    } else if (argname == "--test") {
+      test = (char)atoi(argv[count + 1]);
     } else {
       std::cerr << "Invalid parameter specified - \"" << argname << "\""
                 << std::endl;
@@ -205,9 +235,12 @@ int main(int argc, char **argv) {
             << "Minibatch size: " << minibatch_size << std::endl
             << "Number of epochs: " << epochs << std::endl
             << "Backend type: " << backend_type << std::endl
+            << "Load: " << load << std::endl
+            << "Test: " << test << std::endl
             << std::endl;
   try {
-    train_lenet(data_path, learning_rate, epochs, minibatch_size, backend_type);
+    train_lenet(data_path, learning_rate, epochs, minibatch_size, backend_type,
+                load, test);
   } catch (tiny_dnn::nn_error &err) {
     std::cerr << "Exception: " << err.what() << std::endl;
   }

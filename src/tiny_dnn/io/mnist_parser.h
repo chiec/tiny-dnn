@@ -24,7 +24,7 @@ struct mnist_header {
   uint32_t num_cols;
 };
 
-inline void parse_mnist_header(std::ifstream &ifs, mnist_header &header) {
+inline void parse_mnist_header(std::ifstream &ifs, mnist_header &header, const int load) {
   ifs.read(reinterpret_cast<char *>(&header.magic_number), 4);
   ifs.read(reinterpret_cast<char *>(&header.num_items), 4);
   ifs.read(reinterpret_cast<char *>(&header.num_rows), 4);
@@ -36,6 +36,8 @@ inline void parse_mnist_header(std::ifstream &ifs, mnist_header &header) {
     reverse_endian(&header.num_rows);
     reverse_endian(&header.num_cols);
   }
+
+  if (load > 0 && header.num_items > load) header.num_items = load;
 
   if (header.magic_number != 0x00000803 || header.num_items <= 0)
     throw nn_error("MNIST label-file format error");
@@ -77,7 +79,7 @@ inline void parse_mnist_image(std::ifstream &ifs,
  * @param labels     [out] parsed label data
  **/
 inline void parse_mnist_labels(const std::string &label_file,
-                               std::vector<label_t> *labels) {
+                               std::vector<label_t> *labels, int load) {
   std::ifstream ifs(label_file.c_str(), std::ios::in | std::ios::binary);
 
   if (ifs.bad() || ifs.fail())
@@ -92,6 +94,8 @@ inline void parse_mnist_labels(const std::string &label_file,
     reverse_endian(&magic_number);
     reverse_endian(&num_items);
   }
+
+  if (load > 0) num_items = load;
 
   if (magic_number != 0x00000801 || num_items <= 0)
     throw nn_error("MNIST label-file format error");
@@ -132,7 +136,8 @@ inline void parse_mnist_images(const std::string &image_file,
                                float_t scale_min,
                                float_t scale_max,
                                int x_padding,
-                               int y_padding) {
+                               int y_padding,
+                               int load) {
   if (x_padding < 0 || y_padding < 0)
     throw nn_error("padding size must not be negative");
   if (scale_min >= scale_max)
@@ -145,7 +150,7 @@ inline void parse_mnist_images(const std::string &image_file,
 
   detail::mnist_header header;
 
-  detail::parse_mnist_header(ifs, header);
+  detail::parse_mnist_header(ifs, header, load);
 
   images->resize(header.num_items);
   for (uint32_t i = 0; i < header.num_items; i++) {

@@ -177,6 +177,7 @@ class network {
   void bprop(const std::vector<tensor_t> &out,
              const std::vector<tensor_t> &t,
              const std::vector<tensor_t> &t_cost) {
+    std::cout << "------------------------------------BACKWARDING------------------------------------" << std::endl;
     std::vector<tensor_t> delta = gradient<E>(out, t, t_cost);
     net_.backward(delta);
   }
@@ -200,6 +201,8 @@ class network {
   }
 
   std::vector<tensor_t> fprop(const std::vector<tensor_t> &in) {
+    std::cout << "------------------------------------FORWARDING------------------------------------" << std::endl;
+    std::cout << "**INTO FPROP" << std::endl;
     return net_.forward(in);
   }
 
@@ -291,6 +294,7 @@ class network {
              const bool reset_weights         = false,
              const int n_threads              = CNN_TASK_SIZE,
              const std::vector<vec_t> &t_cost = std::vector<vec_t>()) {
+    std::cout << "---Starting training---" << std::endl;
     if (inputs.size() != class_labels.size()) {
       return false;
     }
@@ -847,6 +851,7 @@ class network {
            const bool reset_weights            = false,
            const int n_threads                 = CNN_TASK_SIZE,
            const std::vector<tensor_t> &t_cost = std::vector<tensor_t>()) {
+    std::cout << "**INTO FIT" << std::endl;
     // check_training_data(in, t);
     check_target_cost_matrix(desired_outputs, t_cost);
     set_netphase(net_phase::train);
@@ -858,8 +863,7 @@ class network {
     in_batch_.resize(batch_size);
     t_batch_.resize(batch_size);
     for (int iter = 0; iter < epoch && !stop_training_; iter++) {
-      for (size_t i = 0; i < inputs.size() && !stop_training_;
-           i += batch_size) {
+      for (size_t i = 0; i < inputs.size() && !stop_training_; i += batch_size) {
         train_once<Error>(
           optimizer, &inputs[i], &desired_outputs[i],
           static_cast<int>(std::min(batch_size, (size_t)inputs.size() - i)),
@@ -890,10 +894,14 @@ class network {
                   int size,
                   const int nbThreads,
                   const tensor_t *t_cost) {
+    std::cout << "**INTO TRAIN_ONCE" << std::endl;
+
     if (size == 1) {
+      //std::cout << "TASDFASDFASDFASDFDSA" << std::endl;
       bprop<E>(fprop(in[0]), t[0], t_cost ? t_cost[0] : tensor_t());
       net_.update_weights(&optimizer);
     } else {
+      //std::cout << "!!!! TRAIN_ONE_BATCH" << std::endl;
       train_onebatch<E>(optimizer, in, t, size, nbThreads, t_cost);
     }
   }
@@ -914,6 +922,7 @@ class network {
                       int batch_size,
                       const int num_tasks,
                       const tensor_t *t_cost) {
+    std::cout << "**INTO TRAIN_ONEBATCH" << std::endl;
     CNN_UNREFERENCED_PARAMETER(num_tasks);
     std::copy(&in[0], &in[0] + batch_size, &in_batch_[0]);
     std::copy(&t[0], &t[0] + batch_size, &t_batch_[0]);

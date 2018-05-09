@@ -463,7 +463,9 @@ class layer : public node {
    * class integrated?
    */
   void forward(const std::vector<tensor_t> &input,
-               std::vector<const tensor_t *> &out) {  // for test
+               std::vector<const tensor_t *> &out) {
+    std::cout << "!!!FORWARD?" << std::endl;
+    // for test
     // allocate data in the computational graph without
     // resetting the weights.
     setup(false);
@@ -487,7 +489,9 @@ class layer : public node {
   }
 
   std::vector<tensor_t> backward(
-    const std::vector<tensor_t> &out_grads) {  // for test
+    const std::vector<tensor_t> &out_grads) {
+    std::cout << "!!!BACKWARD?" << std::endl;
+    // for test
     setup(false);
 
     std::vector<std::vector<const vec_t *>> grads2;
@@ -525,6 +529,7 @@ class layer : public node {
    *
    */
   void forward() {
+    std::cout << "**INTO FORWARD(" << this->layer_type() << ")" << std::endl;
     // the computational graph
     fwd_in_data_.resize(in_channels_);
     fwd_out_data_.resize(out_channels_);
@@ -555,6 +560,7 @@ class layer : public node {
   }
 
   void backward() {
+    std::cout << "**INTO BACKWARD(layer)" << std::endl;
     bwd_in_data_.resize(in_channels_);
     bwd_in_grad_.resize(in_channels_);
     bwd_out_data_.resize(out_channels_);
@@ -582,6 +588,7 @@ class layer : public node {
    *
    */
   void setup(bool reset_weight) {
+    std::cout << "**INTO SETUP" << std::endl;
     // The input shape (width x height x depth) must be equal to the number
     // of input channels a.k.a the number of incoming vectors or 'edges' in
     // the computational nomenclature. Same is applied to output shape and
@@ -602,6 +609,7 @@ class layer : public node {
       if (!next_[i]) {
         // connection edge doesn't exist, so we proceed to allocate the
         // necessary memory.
+        std::cout << "Allocated memory for this edge : " << this->layer_type() <<  std::endl;
         next_[i] = std::make_shared<edge>(this, out_shape()[i], out_type_[i]);
       }
     }

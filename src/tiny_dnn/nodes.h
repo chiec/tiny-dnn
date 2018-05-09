@@ -274,6 +274,7 @@ class nodes {
 class sequential : public nodes {
  public:
   void backward(const std::vector<tensor_t> &first) override {
+    std::cout << "**INTO BACKWARD(sequential)" << std::endl;
     std::vector<std::vector<const vec_t *>> reordered_grad;
     reorder_for_layerwise_processing(first, reordered_grad);
     assert(reordered_grad.size() == 1);
@@ -286,6 +287,7 @@ class sequential : public nodes {
   }
 
   std::vector<tensor_t> forward(const std::vector<tensor_t> &first) override {
+    std::cout << "**INTO FORWARD1" << std::endl;
     std::vector<std::vector<const vec_t *>> reordered_data;
     reorder_for_layerwise_processing(first, reordered_data);
     assert(reordered_data.size() == 1);
@@ -366,6 +368,7 @@ class sequential : public nodes {
 class graph : public nodes {
  public:
   void backward(const std::vector<tensor_t> &out_grad) override {
+    std::cout << "!!!**INTO BACKWARD(graph)" << std::endl;
     size_t output_channel_count = out_grad[0].size();
 
     if (output_channel_count != output_layers_.size()) {
@@ -386,6 +389,7 @@ class graph : public nodes {
   }
 
   std::vector<tensor_t> forward(const std::vector<tensor_t> &in_data) override {
+    std::cout << "**INTO FORWARD2" << std::endl;
     size_t input_data_channel_count = in_data[0].size();
 
     if (input_data_channel_count != input_layers_.size()) {

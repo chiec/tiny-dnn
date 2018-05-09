@@ -69,6 +69,7 @@ class fully_connected_layer : public layer {
 
   void forward_propagation(const std::vector<tensor_t *> &in_data,
                            std::vector<tensor_t *> &out_data) override {
+    std::cout << "**INTO FORWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     // forward fully connected op context
     fwd_ctx_.set_in_out(in_data, out_data);
     fwd_ctx_.setParallelize(layer::parallelize());
@@ -82,6 +83,7 @@ class fully_connected_layer : public layer {
                         const std::vector<tensor_t *> &out_data,
                         std::vector<tensor_t *> &out_grad,
                         std::vector<tensor_t *> &in_grad) override {
+    std::cout << "**INTO BACKWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     // backward fully connected op context
     bwd_ctx_.set_in_out(in_data, out_data, out_grad, in_grad);
     bwd_ctx_.setParallelize(layer::parallelize());

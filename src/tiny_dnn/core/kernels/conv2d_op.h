@@ -21,6 +21,7 @@ class Conv2dOp : public core::OpKernel {
     : core::OpKernel(context) {}
 
   void compute(core::OpKernelContext &context) override {
+    std::cout << "**INTO COMPUTE"  << std::endl;
     auto params = OpKernel::params_->conv();
 
     // incomimg/outcoming data

@@ -18,14 +18,18 @@ inline void fully_connected_op_internal(const tensor_t &in_data,
                                         tensor_t &out_data,
                                         const core::fully_params &params,
                                         const bool layer_parallelize) {
+  std::cout << "**INTO FULLY_CONNECTED_OP_INTERNAL1" << std::endl;
   for_i(layer_parallelize, in_data.size(), [&](size_t sample) {
     const vec_t &in = in_data[sample];
     vec_t &out      = out_data[sample];
 
-    for (size_t i = 0; i < params.out_size_; i++) {
+    for (size_t i = 0; i < params.out_size_; i++) { //For every neuron
       out[i] = float_t{0};
-      for (size_t c = 0; c < params.in_size_; c++) {
+      for (size_t c = 0; c < params.in_size_; c++) {  //For every input
         out[i] += W[c * params.out_size_ + i] * in[c];
+       // std::cout << "W[c * params_out_size_ + i] * in[c]" << std::endl;
+        //std::cout << (c * params.out_size_ + i) << std::endl;
+        //std::cout << "W[" << c << " * " << params.out_size_ << " + " << i << "] * in[" << c << "]" << std::endl;
       }
 
       if (params.has_bias_) {
@@ -43,6 +47,7 @@ inline void fully_connected_op_internal(const tensor_t &prev_out,
                                         tensor_t &prev_delta,
                                         const core::fully_params &params,
                                         const bool layer_parallelize) {
+  std::cout << "**INTO FULLY_CONNECTED_OP_INTERNAL2" << std::endl;
   for (size_t sample = 0; sample < prev_out.size(); sample++) {
     for (size_t c = 0; c < params.in_size_; c++) {
       // propagate delta to previous layer
@@ -51,15 +56,20 @@ inline void fully_connected_op_internal(const tensor_t &prev_out,
         &curr_delta[sample][0], &W[c * params.out_size_], params.out_size_);
     }
 
-    for_(layer_parallelize, 0, params.out_size_, [&](const blocked_range &r) {
+    for_(false, 0, params.out_size_, [&](const blocked_range &r) {
       // accumulate weight-step using delta
       // dW[c * out_size + i] += current_delta[i] * prev_out[c]
+      //std::cout << "in_size_: " << params.in_size_ << std::endl;
       for (size_t c = 0; c < params.in_size_; c++) {
-        vectorize::muladd(&curr_delta[sample][r.begin()], prev_out[sample][c],
+        //std::cout << "c: " << c << std::endl;
+        //dst[i] += c * src[i]
+        //muladd(src, c?, size, dst)
+        vectorize::muladd(&curr_delta[sample][r.begin()],
+                          prev_out[sample][c],
                           r.end() - r.begin(),
                           &dW[sample][c * params.out_size_ + r.begin()]);
+        //std::cout << "dW[" << sample << "][" << c << " * " << params.out_size_ << " + " << r.begin() << "]" << std::endl;
       }
-
       if (params.has_bias_) {
         // vec_t& db = *in_grad[2];
         for (size_t i = r.begin(); i < r.end(); i++) {

@@ -73,6 +73,7 @@ class activation_layer : public layer {
 
   void forward_propagation(const std::vector<tensor_t *> &in_data,
                            std::vector<tensor_t *> &out_data) override {
+    std::cout << "**INTO FORWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     const tensor_t &x = *in_data[0];
     tensor_t &y       = *out_data[0];
     for_i(x.size(), [&](size_t i) { forward_activation(x[i], y[i]); });
@@ -82,6 +83,7 @@ class activation_layer : public layer {
                         const std::vector<tensor_t *> &out_data,
                         std::vector<tensor_t *> &out_grad,
                         std::vector<tensor_t *> &in_grad) override {
+    std::cout << "**INTO BACKWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     tensor_t &dx       = *in_grad[0];
     const tensor_t &dy = *out_grad[0];
     const tensor_t &x  = *in_data[0];

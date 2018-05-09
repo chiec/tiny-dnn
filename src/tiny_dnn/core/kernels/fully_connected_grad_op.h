@@ -20,6 +20,7 @@ class FullyConnectedGradOp : public core::OpKernel {
     : core::OpKernel(context) {}
 
   void compute(core::OpKernelContext &context) override {
+    std::cout << "**INTO COMPUTE" << std::endl;
     auto params = OpKernel::params_->fully();
 
     // incoming/outcoming data

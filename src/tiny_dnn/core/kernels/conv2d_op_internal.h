@@ -16,6 +16,7 @@ inline void conv2d_op_internal(const tensor_t &in_data,
                                tensor_t &out_data,
                                const core::conv_params &params,
                                const bool parallelize) {
+  std::cout << "**INTO CONV2D_OP_INTERNAL" << std::endl;
   for_(parallelize, 0u, in_data.size(),
        [&](const blocked_range &r) {
          size_t out_area    = params.out.area();

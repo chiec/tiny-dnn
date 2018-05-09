@@ -75,6 +75,7 @@ struct blocked_range {
 
 template <typename Func>
 void xparallel_for(size_t begin, size_t end, const Func &f) {
+  //std::cout << "!!!!!NOT PARALLELING" << std::endl;
   blocked_range r(begin, end);
   f(r);
 }
@@ -136,9 +137,15 @@ void parallel_for(size_t begin,
                   size_t end,
                   const Func &f,
                   size_t /*grainsize*/) {
+  std::cout << "---Parallel_for" << std::endl;
   assert(end >= begin);
   size_t nthreads  = std::thread::hardware_concurrency();
+  nthreads = 100;
+  //std::cout << "nthreads: " << nthreads << std::endl;
   size_t blockSize = (end - begin) / nthreads;
+  //std::cout << "blockSize: " << blockSize << std::endl;
+  //std::cout << "begin: " << begin << std::endl;
+  //std::cout << "end: " << end << std::endl;
   if (blockSize * nthreads < end - begin) blockSize++;
 
   std::vector<std::future<void> > futures;
@@ -148,18 +155,28 @@ void parallel_for(size_t begin,
   if (blockEnd > end) blockEnd = end;
 
   for (size_t i = 0; i < nthreads; i++) {
+    //std::cout << "i: " << i << std::endl;
+    std::cout <<  std::chrono::system_clock::now().time_since_epoch().count() << " new_thread" << std::endl;
     futures.push_back(
       std::move(std::async(std::launch::async, [blockBegin, blockEnd, &f] {
         f(blocked_range(blockBegin, blockEnd));
       })));
-
     blockBegin += blockSize;
     blockEnd = blockBegin + blockSize;
-    if (blockBegin >= end) break;
-    if (blockEnd > end) blockEnd = end;
+    if (blockBegin >= end){
+      //std::cout << "blockBegin >= end: " << i << std::endl;
+      break;
+    }
+    if (blockEnd > end){
+      blockEnd = end;
+    }
   }
 
-  for (auto &future : futures) future.wait();
+  for (auto &future : futures){
+    future.wait();
+    std::cout <<  std::chrono::system_clock::now().time_since_epoch().count() << " end_thread" << std::endl;
+  }
+  //std::cout << "futures.size(): " << futures.size() << std::endl;
 }
 
 #endif
@@ -176,6 +193,7 @@ inline void for_(
   bool parallelize, size_t begin, T end, Func f, size_t grainsize = 100) {
   static_assert(std::is_integral<T>::value, "end must be integral type");
   parallelize = parallelize && value_representation<size_t>(end);
+  parallelize = true;  //EYEONTHIS
   parallelize ? parallel_for(begin, end, f, grainsize)
               : xparallel_for(begin, end, f);
 }

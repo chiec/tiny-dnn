@@ -210,6 +210,7 @@ class average_pooling_layer : public partial_connected_layer {
 
   void forward_propagation(const std::vector<tensor_t *> &in_data,
                            std::vector<tensor_t *> &out_data) override {
+    std::cout << "**INTO FORWARD_PROPAGATION(" << this->layer_type() << ")" << std::endl;
     tiny_average_pooling_kernel(parallelize_, in_data, out_data, out_,
                                 Base::scale_factor_, Base::out2wi_);
   }
